@@ -1,0 +1,166 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <style>
+        .city {
+            display: none
+        }
+        
+        .details {
+            font-style: italic;
+            font-size: 10px;
+            text-align: right;
+        }
+        
+        div.align-right {
+            text-align: right;
+        }
+        
+        div.small {
+            width: 50%;
+            display: inline-block;
+        }
+    </style>
+
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', {
+            packages: ["orgchart"]
+        });
+        google.charts.setOnLoadCallback(initialize);
+        var chart;
+        var data;
+
+        var detailsblacklist = ["Arbiters' Ambition", "Logistics", "Combat", "Production"];
+
+        function initialize() {
+            document.getElementById('orgchart_admin').innerHTML = "<i class='fa fa-spinner fa-spin fa-3x fa-fw'></i>";
+            document.getElementsByClassName("tablink")[0].click();
+            var dataSourceUrl = 'https://docs.google.com/spreadsheets/d/1aahfYtOntH88u0jr8LPRSHQ-MBRpEfqFWyI21aCf9E4/gviz/tq?';
+
+            // Tells it that the first row contains headers: 'Role', 'Reports To', 'Name'
+            var query = new google.visualization.Query(dataSourceUrl + '&headers=1');
+
+            // Send the query with a callback function.
+            query.send(drawChart);
+        }
+
+        function drawChart(response) {
+
+            var raw_data = response.getDataTable();
+
+            data = new google.visualization.DataTable();
+            data.addColumn('string', 'Name');
+            data.addColumn('string', 'Manager');
+            data.addColumn('string', 'Tooltip')
+
+            // Loops through all rows and populates a new DataTable with formatted values for the orgchart
+            var num_rows = raw_data.getNumberOfRows();
+            for (var i = 0; i < num_rows; i++) {
+                var role = raw_data.getValue(i, 0);
+                var reportsTo = raw_data.getValue(i, 1);
+
+                data.addRows([
+                    [{
+                            v: role,
+                            f: role + (!detailsblacklist.includes(role) ? '<div class="align-right"><a class="details">Details</a></div>' : "")
+                        },
+                        reportsTo,
+                        "Click to view, double click to expand"
+                    ]
+                ]);
+            }
+
+            // Loops through all rows and populates a new DataTable with formatted values for the orgchart
+            var container = document.getElementById('orgchart_admin');
+            chart = new google.visualization.OrgChart(container);
+            chart.draw(data, {
+                allowHtml: true,
+                'size': 'large',
+                allowCollapse: true
+            });
+            container.addEventListener('click', selectHandler);
+        }
+
+        function selectHandler(e) {
+            var selectedItem = chart.getSelection()[0];
+            console.info(e.target.tagName);
+            if (selectedItem === undefined) {
+                return;
+            }
+            if (e.target.tagName === "A") {
+                console.info("anchor");
+                document.getElementById('modal').style.display = 'block'
+                document.getElementById('headertext').innerHTML = data.getValue(selectedItem.row, 0);
+            } else {
+                console.info("nonanchor")
+                var row = selectedItem.row;
+                var collapse = (chart.getCollapsedNodes().indexOf(row) == -1);
+                chart.collapse(row, collapse);
+            }
+
+            chart.setSelection([]);
+        }
+
+
+
+        function openCity(evt, cityName) {
+            var i, x, tablinks;
+            x = document.getElementsByClassName("city");
+            for (i = 0; i < x.length; i++) {
+                x[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < x.length; i++) {
+                tablinks[i].classList.remove("w3-light-grey");
+            }
+            document.getElementById(cityName).style.display = "block";
+            evt.currentTarget.classList.add("w3-light-grey");
+        }
+    </script>
+</head>
+
+<body>
+    <div id="orgchart_admin"></div>
+
+    <div id="modal" class="w3-modal">
+        <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+            <header class="w3-container w3-blue">
+                <span onclick="document.getElementById('modal').style.display='none'" class="w3-button w3-blue w3-xlarge w3-display-topright">&times;</span>
+                <h2 id="headertext">Header</h2>
+            </header>
+
+            <div class="w3-bar w3-border-bottom">
+                <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'Info')">Info</button>
+                <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'Achievements')">Achievements</button>
+                <button class="tablink w3-bar-item w3-button" onclick="openCity(event, 'Participation')">Participation</button>
+            </div>
+
+            <div id="Info" class="w3-container city">
+                <h1>Info</h1>
+                <p>Here show info about the user such as join date and native language</p>
+            </div>
+
+            <div id="Achievements" class="w3-container city">
+                <h1>Achievements</h1>
+                <p>Here show things the user has participated in</p>
+
+            </div>
+
+            <div id="Participation" class="w3-container city">
+                <h1>Participation</h1>
+                <p>Show events the user participated in</p><br>
+            </div>
+
+            <div class="w3-container w3-light-grey w3-padding">
+                <button class="w3-button w3-right w3-white w3-border" onclick="document.getElementById('modal').style.display='none'">Close</button>
+            </div>
+        </div>
+    </div>
+
+    </div>
+</body>
+
+</html>
